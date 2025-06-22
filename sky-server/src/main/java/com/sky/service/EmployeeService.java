@@ -1,15 +1,27 @@
 package com.sky.service;
 
+import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.entity.Employee;
+import com.sky.exception.AccountLockedException;
+import com.sky.exception.AccountNotFoundException;
+import com.sky.exception.PasswordErrorException;
 
 public interface EmployeeService {
 
     /**
-     * 员工登录
-     * @param employeeLoginDTO
-     * @return
+     * 校验登录 并返回员工实体
+     * @param employeeLoginDTO 员工登录DTO,包含用户名和密码
+     * @return employee 员工实体
+     * @throws AccountNotFoundException 如果用户名不存在
+     * @throws PasswordErrorException 如果密码错误
+     * @throws AccountLockedException 如果账号被锁定
      */
     Employee login(EmployeeLoginDTO employeeLoginDTO);
 
+    /**
+     * 新增员工 将 DTO 转换为实体类 并设置初始值 插入数据库
+     * @param employeeDTO 员工DTO
+     */
+    void save(EmployeeDTO employeeDTO);
 }

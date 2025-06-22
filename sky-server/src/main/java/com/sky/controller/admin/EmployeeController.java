@@ -1,13 +1,18 @@
 package com.sky.controller.admin;
 
 import com.sky.constant.JwtClaimsConstant;
+import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.entity.Employee;
+import com.sky.exception.AccountLockedException;
+import com.sky.exception.AccountNotFoundException;
+import com.sky.exception.PasswordErrorException;
 import com.sky.properties.JwtProperties;
 import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import com.sky.utils.JwtUtil;
 import com.sky.vo.EmployeeLoginVO;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,10 +37,12 @@ public class EmployeeController {
     private JwtProperties jwtProperties;
 
     /**
-     * 登录
-     *
-     * @param employeeLoginDTO
-     * @return
+     * 员工登录 并生成 JWT 令牌
+     * @param employeeLoginDTO 员工登录信息，包含用户名和密码
+     * @return 封装了员工信息和 token 的 Result<EmployeeLoginVO>
+     * @throws AccountNotFoundException 如果用户名不存在
+     * @throws PasswordErrorException 如果密码错误
+     * @throws AccountLockedException 如果账号被锁定
      */
     @PostMapping("/login")
     public Result<EmployeeLoginVO> login(@RequestBody EmployeeLoginDTO employeeLoginDTO) {
@@ -43,7 +50,7 @@ public class EmployeeController {
 
         Employee employee = employeeService.login(employeeLoginDTO);
 
-        //登录成功后，生成jwt令牌
+        // 登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.EMP_ID, employee.getId());
         String token = JwtUtil.createJWT(
@@ -62,12 +69,23 @@ public class EmployeeController {
     }
 
     /**
-     * 退出
-     *
-     * @return
+     * 员工退出
      */
     @PostMapping("/logout")
     public Result<String> logout() {
+        return Result.success();
+    }
+
+    /**
+     * 新增员工
+     * @param employeeDTO 员工DTO
+     * @return Result<String> 空
+     */
+    @PostMapping
+    @ApiOperation("新增员工")
+    public Result<String> save(@RequestBody EmployeeDTO employeeDTO) {
+        log.info("新增员工：{}", employeeDTO);
+        employeeService.save(employeeDTO);
         return Result.success();
     }
 
