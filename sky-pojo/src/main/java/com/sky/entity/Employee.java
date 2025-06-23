@@ -1,5 +1,6 @@
 package com.sky.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,20 +23,19 @@ public class Employee implements Serializable {
 
     private String name;
 
+    @JsonIgnore
     private String password;
 
     private String phone;
 
-    private String sex;
+    private String sex; // 性别 0 女 1 男
 
     private String idNumber;
 
-    private Integer status;
+    private Integer status; // 状态 0 禁用 1 启用
 
-    //@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
-    //@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     private Long createUser;
