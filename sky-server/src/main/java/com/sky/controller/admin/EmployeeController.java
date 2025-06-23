@@ -78,11 +78,10 @@ public class EmployeeController {
     /**
      * 新增员工
      * @param employeeDTO 员工DTO
-     * @return Result<String> 空
      */
     @PostMapping
     @ApiOperation("新增员工")
-    public Result<String> save(@RequestBody EmployeeDTO employeeDTO) {
+    public Result save(@RequestBody EmployeeDTO employeeDTO) {
         log.info("新增员工：{}", employeeDTO);
         employeeService.save(employeeDTO);
         return Result.success();
@@ -99,5 +98,21 @@ public class EmployeeController {
         log.info("分页查询员工：{}", employeePageQueryDTO);
         PageResult pageResult = employeeService.pageQuery(employeePageQueryDTO);
         return Result.success(pageResult);
+    }
+
+    /**
+     * 启用或禁用员工账号
+     * @param status 状态 0禁用 1启用
+     * @param id 员工ID
+     * @return Result<String> 结果
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("启用或禁用员工账号")
+    public Result startOrStop(@PathVariable Integer status, Long id) {
+        log.info("启用或禁用员工账号：{},{}", status, id);
+        // 1. 调用业务层方法修改员工状态
+        employeeService.startOrStop(status, id);
+        // 2. 返回结果
+        return Result.success();
     }
 }
