@@ -104,7 +104,6 @@ public class EmployeeController {
      * 启用或禁用员工账号
      * @param status 状态 0禁用 1启用
      * @param id 员工ID
-     * @return Result<String> 结果
      */
     @PostMapping("/status/{status}")
     @ApiOperation("启用或禁用员工账号")
@@ -127,5 +126,17 @@ public class EmployeeController {
         log.info("根据id查询员工：{}", id);
         Employee employee = employeeService.getById(id);
         return Result.success(employee);
+    }
+
+    /**
+     * 修改员工信息
+     * @param employeeDTO 员工DTO
+     */
+    @PutMapping
+    @ApiOperation("修改员工信息")
+    public Result update(@RequestBody EmployeeDTO employeeDTO) {
+        log.info("修改员工信息：{}", employeeDTO);
+        employeeService.update(employeeDTO);
+        return Result.success();
     }
 }

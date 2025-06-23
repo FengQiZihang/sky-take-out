@@ -103,12 +103,14 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     @Override
     public void startOrStop(Integer status, Long id) {
+        // 1. 构造employee
         Employee employee = Employee.builder()
                 .id(id)
                 .status(status)
                 .updateTime(LocalDateTime.now())
                 .updateUser(BaseContext.getCurrentId())
                 .build();
+        // 2. 更新employee
         employeeMapper.update(employee);
     }
 
@@ -120,4 +122,20 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeMapper.getById(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(EmployeeDTO employeeDTO) {
+        // 1. 将 DTO 转换为实体类
+        Employee employee = new Employee();
+        // 2. 对象拷贝
+        BeanUtils.copyProperties(employeeDTO, employee);
+        // 3. 设置修改时间
+        employee.setUpdateTime(LocalDateTime.now());
+        // 4. 设置修改人
+        employee.setUpdateUser(BaseContext.getCurrentId());
+        // 5. 更新employee
+        employeeMapper.update(employee);
+    }
 }
