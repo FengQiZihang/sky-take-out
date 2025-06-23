@@ -19,7 +19,7 @@ public class Employee implements Serializable {
 
     private Long id;
 
-    private String username;
+    private String username; // 用户名唯一
 
     private String name;
 
