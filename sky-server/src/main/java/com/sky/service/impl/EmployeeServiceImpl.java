@@ -75,13 +75,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
         // 4. 设置状态，默认正常状态 1表示正常 0表示锁定
         employee.setStatus(StatusConstant.ENABLE);
-        // 5. 设置创建时间和修改时间
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
-        // 6. 设置当前创建人id和修改人id
-        employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
-        // 7. 插入数据库
+        // 5. 插入数据库
         employeeMapper.insert(employee);
     }
 
@@ -94,7 +88,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
         // 2. 执行分页查询
         Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
-        // 3. 返回分页查询结果
+        // 3. 封装分页查询结果并返回
         return new PageResult(page.getTotal(), page.getResult());
     }
 
@@ -107,8 +101,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = Employee.builder()
                 .id(id)
                 .status(status)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
                 .build();
         // 2. 更新employee
         employeeMapper.update(employee);
@@ -131,11 +123,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = new Employee();
         // 2. 对象拷贝
         BeanUtils.copyProperties(employeeDTO, employee);
-        // 3. 设置修改时间
-        employee.setUpdateTime(LocalDateTime.now());
-        // 4. 设置修改人
-        employee.setUpdateUser(BaseContext.getCurrentId());
-        // 5. 更新employee
+        // 3. 更新employee
         employeeMapper.update(employee);
     }
 }

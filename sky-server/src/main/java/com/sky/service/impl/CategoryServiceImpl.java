@@ -40,19 +40,13 @@ public class CategoryServiceImpl implements CategoryService {
      * @param categoryDTO
      */
     public void save(CategoryDTO categoryDTO) {
+        // 1.将DTO转为实体类
         Category category = new Category();
-        //属性拷贝
+        // 2.对象拷贝
         BeanUtils.copyProperties(categoryDTO, category);
-
-        //分类状态默认为禁用状态0
+        // 3.分类状态默认为禁用状态0
         category.setStatus(StatusConstant.DISABLE);
-
-        //设置创建时间、修改时间、创建人、修改人
-        category.setCreateTime(LocalDateTime.now());
-        category.setUpdateTime(LocalDateTime.now());
-        category.setCreateUser(BaseContext.getCurrentId());
-        category.setUpdateUser(BaseContext.getCurrentId());
-
+        // 4.插入数据库
         categoryMapper.insert(category);
     }
 
@@ -62,9 +56,11 @@ public class CategoryServiceImpl implements CategoryService {
      * @return
      */
     public PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO) {
+        // 1. 设置分页查询条件
         PageHelper.startPage(categoryPageQueryDTO.getPage(),categoryPageQueryDTO.getPageSize());
-        //下一条sql进行分页，自动加入limit关键字分页
+        // 2. 执行分页查询
         Page<Category> page = categoryMapper.pageQuery(categoryPageQueryDTO);
+        // 3. 封装分页查询结果并返回
         return new PageResult(page.getTotal(), page.getResult());
     }
 
@@ -98,11 +94,6 @@ public class CategoryServiceImpl implements CategoryService {
     public void update(CategoryDTO categoryDTO) {
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO,category);
-
-        //设置修改时间、修改人
-        category.setUpdateTime(LocalDateTime.now());
-        category.setUpdateUser(BaseContext.getCurrentId());
-
         categoryMapper.update(category);
     }
 
@@ -112,12 +103,12 @@ public class CategoryServiceImpl implements CategoryService {
      * @param id
      */
     public void startOrStop(Integer status, Long id) {
+        // 1. 构造category
         Category category = Category.builder()
                 .id(id)
                 .status(status)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
                 .build();
+        // 2. 更新category
         categoryMapper.update(category);
     }
 
