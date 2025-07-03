@@ -15,9 +15,9 @@ public interface EmployeeService {
      * 校验登录 并返回员工实体
      * @param employeeLoginDTO 员工登录DTO,包含用户名和密码
      * @return employee 员工实体
-     * @throws AccountNotFoundException 如果用户名不存在
-     * @throws PasswordErrorException 如果密码错误
-     * @throws AccountLockedException 如果账号被锁定
+     * @throws AccountNotFoundException 用户名不存在
+     * @throws PasswordErrorException 密码错误
+     * @throws AccountLockedException 账号被锁定
      */
     Employee login(EmployeeLoginDTO employeeLoginDTO);
 
