@@ -109,9 +109,7 @@ public class EmployeeController {
     @ApiOperation("启用或禁用员工账号")
     public Result startOrStop(@PathVariable Integer status, Long id) {
         log.info("启用或禁用员工账号：status:{}, id:{}", status, id);
-        // 1. 调用业务层方法修改员工状态
         employeeService.startOrStop(status, id);
-        // 2. 返回结果
         return Result.success();
     }
 

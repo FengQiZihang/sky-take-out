@@ -125,7 +125,7 @@ public class DishServiceImpl implements DishService {
         // 删除原有口味数据
         dishFlavorMapper.deleteByDishIds(Collections.singletonList(dish.getId()));
 
-        //重新插入口味数据
+        // 重新插入口味数据
         List<DishFlavor> flavors = dishDTO.getFlavors();
         if (flavors != null || !flavors.isEmpty()) {
             // 设置口味数据的菜品ID
@@ -135,5 +135,19 @@ public class DishServiceImpl implements DishService {
             // 批量插入口味数据
             dishFlavorMapper.insertBatch(flavors);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        // 构造菜品对象
+        Dish dish = Dish.builder()
+                .id(id)
+                .status(status)
+                .build();
+        // 更新菜品状态
+        dishMapper.update(dish);
     }
 }

@@ -2,6 +2,7 @@ package com.sky.controller.admin;
 
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.DishService;
@@ -50,6 +51,8 @@ public class DishController {
     /**
      * 删除菜品
      * @param ids 菜品ID列表
+     * @throws DeletionNotAllowedException 起售中的菜品不能删除
+     * @throws DeletionNotAllowedException 当前菜品关联了套餐,不能删除
      */
     @DeleteMapping
     @ApiOperation("批量删除菜品")
@@ -81,6 +84,19 @@ public class DishController {
     public Result update(@RequestBody DishDTO dishDTO) {
         log.info("修改菜品:{}", dishDTO);
         dishService.updateWithFlavor(dishDTO);
+        return Result.success();
+    }
+
+    /**
+     * 起售或停售菜品
+     * @param status 状态 0 停售 1 起售
+     * @param id 菜品ID
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("起售或停售菜品")
+    public Result startOrStop(@PathVariable Integer status, Long id) {
+        log.info("起售或停售菜品: status:{}, id:{}", status, id);
+        dishService.startOrStop(status, id);
         return Result.success();
     }
 }

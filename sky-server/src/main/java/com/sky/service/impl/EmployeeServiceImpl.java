@@ -97,12 +97,12 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     @Override
     public void startOrStop(Integer status, Long id) {
-        // 1. 构造employee
+        // 构造员工对象
         Employee employee = Employee.builder()
                 .id(id)
                 .status(status)
                 .build();
-        // 2. 更新employee
+        // 更新员工状态
         employeeMapper.update(employee);
     }
 
