@@ -7,6 +7,7 @@ import com.sky.constant.StatusConstant;
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
+import com.sky.entity.DishFlavor;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.DishFlavorMapper;
 import com.sky.mapper.DishMapper;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -74,7 +76,7 @@ public class DishServiceImpl implements DishService {
     public void deleteBatch(List<Long> ids) {
         // 判断当前菜品是否能够删除---是否存在起售中的菜品
         for (Long id : ids) {
-            Dish dish = dishMapper.selectById(id);
+            Dish dish = dishMapper.getById(id);
             if (dish.getStatus() == StatusConstant.ENABLE) {
                 // 抛出异常：起售中的菜品不能删除
                 throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
@@ -91,5 +93,47 @@ public class DishServiceImpl implements DishService {
         dishMapper.deleteByIds(ids);
         // 删除菜品口味表中的对应口味数据
         dishFlavorMapper.deleteByDishIds(ids);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DishVO getByIdWithFlavor(Long id) {
+        // 根据ID查询菜品
+        Dish dish = dishMapper.getById(id);
+        // 根据菜品ID查询对应的口味
+        List<DishFlavor> flavors = dishFlavorMapper.getByDishId(id);
+        // 将菜品和口味数据封装到 DishVO 中
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish, dishVO);
+        dishVO.setFlavors(flavors);
+        // 返回菜品视图对象
+        return dishVO;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateWithFlavor(DishDTO dishDTO) {
+        Dish dish = new Dish();
+        // 将 DTO 转换为实体类
+        BeanUtils.copyProperties(dishDTO, dish);
+        // 修改菜品表基本信息
+        dishMapper.update(dish);
+        // 删除原有口味数据
+        dishFlavorMapper.deleteByDishIds(Collections.singletonList(dish.getId()));
+
+        //重新插入口味数据
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if (flavors != null || !flavors.isEmpty()) {
+            // 设置口味数据的菜品ID
+            flavors.forEach(dishFlavor -> {
+                dishFlavor.setDishId(dish.getId());
+            });
+            // 批量插入口味数据
+            dishFlavorMapper.insertBatch(flavors);
+        }
     }
 }

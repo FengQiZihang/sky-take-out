@@ -4,6 +4,7 @@ import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.result.PageResult;
+import com.sky.vo.DishVO;
 
 import java.util.List;
 
@@ -28,4 +29,17 @@ public interface DishService {
      * @throws DeletionNotAllowedException 当前菜品关联了套餐,不能删除
      */
     void deleteBatch(List<Long> ids);
+
+    /**
+     * 根据ID查询菜品和对应的口味
+     * @param id 菜品ID
+     * @return 菜品VO对象
+     */
+    DishVO getByIdWithFlavor(Long id);
+
+    /**
+     * 修改菜品和对应的口味
+     * @param dishDTO 菜品DTO
+     */
+    void updateWithFlavor(DishDTO dishDTO);
 }
