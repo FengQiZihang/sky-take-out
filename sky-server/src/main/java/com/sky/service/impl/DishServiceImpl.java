@@ -37,6 +37,7 @@ public class DishServiceImpl implements DishService {
      * {@inheritDoc}
      */
     @Transactional
+    @Override
     public void saveWithFlavor(DishDTO dishDTO) {
         // 将 DTO 转换为实体类
         Dish dish = new Dish();
