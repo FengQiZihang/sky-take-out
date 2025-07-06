@@ -150,4 +150,12 @@ public class DishServiceImpl implements DishService {
         // 更新菜品状态
         dishMapper.update(dish);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Dish> getListByCategoryId(Long categoryId) {
+        return dishMapper.getListByCategoryId(categoryId);
+    }
 }

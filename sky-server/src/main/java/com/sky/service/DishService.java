@@ -2,6 +2,7 @@ package com.sky.service;
 
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Dish;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.result.PageResult;
 import com.sky.vo.DishVO;
@@ -49,4 +50,11 @@ public interface DishService {
      * @param id 菜品ID
      */
     void startOrStop(Integer status, Long id);
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId 分类id
+     * @return 菜品列表
+     */
+    List<Dish> getListByCategoryId(Long categoryId);
 }
