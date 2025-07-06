@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 /**
  * 后端统一返回结果
- * @param <T>
+ * @param <T> 数据类型
  */
 @Data
 public class Result<T> implements Serializable {
