@@ -19,7 +19,7 @@
                 and d.status = #{status}
             </if>
         </where>
-        order by d.update_time desc
+        order by d.create_time desc
     </select>
     <!-- 批量删除菜品 -->
     <delete id="deleteByIds">
