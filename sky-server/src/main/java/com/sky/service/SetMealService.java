@@ -4,6 +4,7 @@ import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.result.PageResult;
+import com.sky.vo.SetmealVO;
 
 import java.util.List;
 
@@ -34,4 +35,11 @@ public interface SetMealService {
      * @param id 套餐ID
      */
     void startOrStop(Integer status, Long id);
+
+    /**
+     * 根据id查询套餐和对应的菜品选项
+     * @param id 套餐ID
+     * @return SetmealVO 套餐视图对象
+     */
+    SetmealVO getByIdWithDish(Long id);
 }

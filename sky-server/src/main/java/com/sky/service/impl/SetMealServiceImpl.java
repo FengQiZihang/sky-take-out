@@ -7,6 +7,7 @@ import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Setmeal;
+import com.sky.entity.SetmealDish;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
@@ -85,6 +86,23 @@ public class SetMealServiceImpl implements SetMealService {
         setmealMapper.deleteByIds(ids);
         // 删除套餐菜品表中的对应套餐菜品数据
         setmealDishMapper.deleteBySetmealIds(ids);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SetmealVO getByIdWithDish(Long id) {
+        // 根据id查询套餐
+        Setmeal setmeal = setmealMapper.getById(id);
+        // 根据套餐id查询套餐菜品
+        List<SetmealDish> setmealDishes = setmealDishMapper.getBySetmealId(id);
+        // 将套餐菜品封装到套餐视图对象中
+        SetmealVO setmealVO = new SetmealVO();
+        BeanUtils.copyProperties(setmeal, setmealVO);
+        setmealVO.setSetmealDishes(setmealDishes);
+        // 返回套餐视图对象
+        return setmealVO;
     }
 
     /**
