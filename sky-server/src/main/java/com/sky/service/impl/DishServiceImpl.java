@@ -128,7 +128,7 @@ public class DishServiceImpl implements DishService {
 
         // 重新插入口味数据
         List<DishFlavor> flavors = dishDTO.getFlavors();
-        if (flavors != null || !flavors.isEmpty()) {
+        if (flavors != null && !flavors.isEmpty()) {
             // 设置口味数据的菜品ID
             flavors.forEach(dishFlavor -> {
                 dishFlavor.setDishId(dish.getId());
