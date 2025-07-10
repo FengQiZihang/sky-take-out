@@ -20,4 +20,12 @@
         </where>
         order by s.create_time desc
     </select>
+
+    <!-- 根据id列表批量删除套餐 -->
+    <delete id="deleteByIds">
+        delete from setmeal where id in
+        <foreach collection="ids" item="id"  open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>

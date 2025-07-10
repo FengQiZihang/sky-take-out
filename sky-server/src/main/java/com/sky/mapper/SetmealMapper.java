@@ -11,13 +11,15 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 @Mapper
 public interface SetmealMapper {
 
     /**
      * 根据分类id查询套餐的数量
-     * @param id
-     * @return
+     * @param id 分类id
+     * @return 套餐数量
      */
     @Select("select count(id) from setmeal where category_id = #{categoryId}")
     Integer countByCategoryId(Long id);
@@ -38,4 +40,18 @@ public interface SetmealMapper {
      * @return Page<SetmealVo> Setmeal视图对象的分页结果
      */
     Page<SetmealVO> pageQuery(SetmealPageQueryDTO setmealPageQueryDTO);
+
+    /**
+     * 根据id查询套餐
+     * @param id 套餐id
+     * @return Setmeal 套餐实体
+     */
+    @Select("select * from setmeal where id = #{id}")
+    Setmeal getById(Long id);
+
+    /**
+     * 根据id列表批量删除套餐
+     * @param ids id列表
+     */
+    void deleteByIds(List<Long> ids);
 }
