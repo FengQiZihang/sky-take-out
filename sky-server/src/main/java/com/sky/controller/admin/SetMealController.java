@@ -78,6 +78,18 @@ public class SetMealController {
     }
 
     /**
+     * 修改套餐
+     * @param setmealDTO 套餐DTO
+     */
+    @PutMapping
+    @ApiOperation("修改套餐")
+    public Result<String> update(@RequestBody SetmealDTO setmealDTO) {
+        log.info("修改套餐:{}", setmealDTO);
+        setMealService.updateWithDish(setmealDTO);
+        return Result.success();
+    }
+
+    /**
      * 起售或停售套餐
      * @param status 套餐状态，1表示起售，0表示停售
      * @param id 套餐ID
