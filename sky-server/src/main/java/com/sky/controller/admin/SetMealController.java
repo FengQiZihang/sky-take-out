@@ -61,4 +61,17 @@ public class SetMealController {
         setMealService.deleteBatch(ids);
         return Result.success();
     }
+
+    /**
+     * 起售或停售套餐
+     * @param status 套餐状态，1表示起售，0表示停售
+     * @param id 套餐ID
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("起售或停售套餐")
+    public Result<String> startOrStop(@PathVariable Integer status, Long id) {
+        log.info("起售或停售套餐: status:{}, id:{}", status, id);
+        setMealService.startOrStop(status, id);
+        return Result.success();
+    }
 }

@@ -21,6 +21,7 @@
         </where>
         order by d.create_time desc
     </select>
+
     <!-- 批量删除菜品 -->
     <delete id="deleteByIds">
         delete from dish where id in
@@ -28,6 +29,7 @@
             #{id}
         </foreach>
     </delete>
+
     <!-- 修改菜品数据 -->
     <update id="update">
         update dish

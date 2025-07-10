@@ -2,6 +2,7 @@ package com.sky.service;
 
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.result.PageResult;
 
 import java.util.List;
@@ -23,6 +24,14 @@ public interface SetMealService {
     /**
      * 批量删除套餐
      * @param ids 套餐ID列表
+     * @throws DeletionNotAllowedException 起售中的套餐不能删除
      */
     void deleteBatch(List<Long> ids);
+
+    /**
+     * 起售或停售套餐
+     * @param status 套餐状态，1表示起售，0表示停售
+     * @param id 套餐ID
+     */
+    void startOrStop(Integer status, Long id);
 }

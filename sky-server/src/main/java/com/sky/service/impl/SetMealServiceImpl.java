@@ -86,4 +86,18 @@ public class SetMealServiceImpl implements SetMealService {
         // 删除套餐菜品表中的对应套餐菜品数据
         setmealDishMapper.deleteBySetmealIds(ids);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        // 构造套餐对象
+        Setmeal setmeal = Setmeal.builder()
+                .id(id)
+                .status(status)
+                .build();
+        // 更新套餐状态
+        setmealMapper.update(setmeal);
+    }
 }
