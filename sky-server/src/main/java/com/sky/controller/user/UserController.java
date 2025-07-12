@@ -23,7 +23,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/user/user")
-@Api(tags = "C端用户相关接口")
+@Api(tags = "C端-用户相关接口")
 public class UserController {
 
     @Autowired
@@ -55,7 +55,7 @@ public class UserController {
                 .build();
 
         // 返回结果
-        return Result.success();
+        return Result.success(userLoginVO);
     }
 
 }

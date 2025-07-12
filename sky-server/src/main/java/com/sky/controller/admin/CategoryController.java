@@ -89,7 +89,7 @@ public class CategoryController {
 
     /**
      * 根据类型查询分类
-     * @param type 类型
+     * @param type 类型 1 菜品分类 2 套餐分类
      * @return Result<List<Category>> 分类列表
      */
     @GetMapping("/list")

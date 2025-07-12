@@ -104,7 +104,7 @@ public class DishController {
 
     /**
      * 根据分类id查询菜品
-     * @param categoryId 分类id
+     * @param categoryId 分类id 1 菜品分类 2 套餐分类
      * @return Result<List<Dish>> 菜品列表
      */
     @GetMapping("/list")
