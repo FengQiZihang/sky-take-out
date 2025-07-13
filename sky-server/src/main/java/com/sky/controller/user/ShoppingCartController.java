@@ -43,4 +43,15 @@ public class ShoppingCartController {
         log.info("【用户端】查看购物车");
         return Result.success(shoppingCartService.showShoppingCart());
     }
+
+    /**
+     * 清空购物车
+     */
+    @DeleteMapping("/clean")
+    @ApiOperation("清空购物车")
+    private Result<String> clean() {
+        log.info("【用户端】清空购物车");
+        shoppingCartService.cleanShoppingCart();
+        return Result.success();
+    }
 }
