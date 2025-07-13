@@ -40,7 +40,7 @@ public class UserController {
     @PostMapping("/login")
     @ApiOperation("微信登录")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
-        log.info("微信用户登录：{}", userLoginDTO);
+        log.info("【用户端】微信用户登录：{}", userLoginDTO);
         // 微信登录
         User user = userService.wxLogin(userLoginDTO);
         // 为微信用户生成JWT令牌

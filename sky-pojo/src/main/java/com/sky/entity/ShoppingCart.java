@@ -22,7 +22,7 @@ public class ShoppingCart implements Serializable {
 
     private Long id;
 
-    //名称
+    //名称 冗余字段
     private String name;
 
     //用户id
@@ -40,10 +40,10 @@ public class ShoppingCart implements Serializable {
     //数量
     private Integer number;
 
-    //金额
+    //金额 冗余字段
     private BigDecimal amount;
 
-    //图片
+    //图片 冗余字段
     private String image;
 
     private LocalDateTime createTime;
