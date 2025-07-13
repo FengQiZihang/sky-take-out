@@ -3,8 +3,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.ShoppingCartMapper">
 
-    <!-- 根据用户id和菜品id或套餐id和口味查询购物车数据 -->
-    <select id="getByUserIdAndDishIdOrSetmealId" resultType="com.sky.entity.ShoppingCart">
+    <!-- 根据条件查询购物车 -->
+    <select id="list" resultType="com.sky.entity.ShoppingCart">
         select * from shopping_cart
         <where>
             <if test="userId != null">

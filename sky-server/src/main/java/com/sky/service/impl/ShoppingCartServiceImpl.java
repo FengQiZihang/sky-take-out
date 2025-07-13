@@ -38,7 +38,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         // 只能查看自己的购物车
         shoppingCart.setUserId(BaseContext.getCurrentId());
         // 查询当前菜品或者套餐是否在购物车中
-        List<ShoppingCart> shoppingCartList = shoppingCartMapper.getByUserIdAndDishIdOrSetmealId(shoppingCart);
+        List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
 
         if (!shoppingCartList.isEmpty() && shoppingCartList.get(0) != null) {
             // 如果存在，则在原来数量基础上+1
@@ -66,8 +66,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             // 插入购物车数据
             shoppingCartMapper.insert(shoppingCart);
         }
+    }
 
-
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ShoppingCart> showShoppingCart() {
+        return shoppingCartMapper.list(ShoppingCart.builder().userId(BaseContext.getCurrentId()).build());
     }
 }

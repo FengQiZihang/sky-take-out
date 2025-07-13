@@ -11,12 +11,11 @@ import java.util.List;
 public interface ShoppingCartMapper {
 
     /**
-     * 根据用户id和菜品id或套餐id和口味查询购物车数据
+     * 根据条件查询购物车
      * @param shoppingCart 购物车实体
      * @return List<ShoppingCart> 购物车列表
      */
-    List<ShoppingCart> getByUserIdAndDishIdOrSetmealId(ShoppingCart shoppingCart);
-
+    List<ShoppingCart> list(ShoppingCart shoppingCart);
 
     /**
      * 根据id更新购物车数量
