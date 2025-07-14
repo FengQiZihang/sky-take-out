@@ -72,13 +72,13 @@ public class Orders implements Serializable {
     //用户名
     private String userName;
 
-    //手机号
+    //手机号 冗余字段
     private String phone;
 
-    //地址
+    //地址 冗余字段
     private String address;
 
-    //收货人
+    //收货人 冗余字段
     private String consignee;
 
     //订单取消原因

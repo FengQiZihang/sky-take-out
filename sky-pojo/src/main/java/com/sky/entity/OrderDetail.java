@@ -21,7 +21,7 @@ public class OrderDetail implements Serializable {
 
     private Long id;
 
-    //名称
+    //商品名称 冗余字段
     private String name;
 
     //订单id
@@ -42,6 +42,6 @@ public class OrderDetail implements Serializable {
     //金额
     private BigDecimal amount;
 
-    //图片
+    //图片 冗余字段
     private String image;
 }
