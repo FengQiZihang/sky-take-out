@@ -249,16 +249,24 @@ public class OrderServiceImpl implements OrderService {
         log.info("【用户端】根据id查询订单:id={}", id);
         Orders ordersDB = orderMapper.getById(id);
 
+        /**
+         * 业务规则
+         * 1. 待支付和待接单状态下，用户可直接取消订单
+         * 2. 商家已接单状态下，用户取消订单需电话沟通商家
+         * 3. 派送中状态下，用户取消订单需电话沟通商家
+         * 4. 如果在待接单状态下取消订单，需要给用户退款
+         * 5. 取消订单后需要将订单状态修改为“已取消”
+         */
+
         if (ordersDB == null) {
             // 订单不存在
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
-        log.info("【用户端】订单状态:{}", ordersDB.getStatus());
-
-        // 订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+        log.info("【用户端】订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
         if (ordersDB.getStatus() > 2) {
             // 订单状态错误
+            // TODO 电话沟通商家
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
@@ -291,6 +299,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(Orders.CANCELLED);
         orders.setCancelReason("用户取消");
         orders.setCancelTime(LocalDateTime.now());
+        log.info("【用户端】更新订单状态、取消原因、取消时间:orders={}", orders);
         orderMapper.update(orders);
     }
 }

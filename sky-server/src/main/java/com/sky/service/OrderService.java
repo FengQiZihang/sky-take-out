@@ -2,6 +2,7 @@ package com.sky.service;
 
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
+import com.sky.exception.OrderBusinessException;
 import com.sky.result.PageResult;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
@@ -48,6 +49,8 @@ public interface OrderService {
     /**
      * 用户取消订单
      * @param id 订单id
+     * @throws OrderBusinessException 订单不存在
+     * @throws OrderBusinessException 订单状态错误
      */
     void userCancelById(Long id) throws Exception;
 }
