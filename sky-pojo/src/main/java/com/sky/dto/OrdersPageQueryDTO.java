@@ -15,6 +15,8 @@ public class OrdersPageQueryDTO implements Serializable {
 
     private String number;
 
+    private Long userId;
+
     private  String phone;
 
     private Integer status;
@@ -24,7 +26,5 @@ public class OrdersPageQueryDTO implements Serializable {
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endTime;
-
-    private Long userId;
 
 }
