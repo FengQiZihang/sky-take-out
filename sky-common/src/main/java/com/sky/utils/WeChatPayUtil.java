@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.sky.properties.WeChatProperties;
 import com.wechat.pay.contrib.apache.httpclient.WechatPayHttpClientBuilder;
 import com.wechat.pay.contrib.apache.httpclient.util.PemUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -33,6 +34,7 @@ import java.util.List;
  * 微信支付工具类
  */
 @Component
+@Slf4j
 public class WeChatPayUtil {
 
     //微信支付下单接口地址
@@ -46,7 +48,6 @@ public class WeChatPayUtil {
 
     /**
      * 获取调用微信接口的客户端工具对象
-     *
      * @return
      */
     private CloseableHttpClient getClient() {
@@ -74,7 +75,6 @@ public class WeChatPayUtil {
 
     /**
      * 发送post方式请求
-     *
      * @param url
      * @param body
      * @return
@@ -100,7 +100,6 @@ public class WeChatPayUtil {
 
     /**
      * 发送get方式请求
-     *
      * @param url
      * @return
      */
@@ -124,7 +123,6 @@ public class WeChatPayUtil {
 
     /**
      * jsapi下单
-     *
      * @param orderNum    商户订单号
      * @param total       总金额
      * @param description 商品描述
@@ -156,7 +154,6 @@ public class WeChatPayUtil {
 
     /**
      * 小程序支付
-     *
      * @param orderNum    商户订单号
      * @param total       金额，单位 元
      * @param description 商品描述
@@ -168,7 +165,7 @@ public class WeChatPayUtil {
         String bodyAsString = jsapi(orderNum, total, description, openid);
         //解析返回结果
         JSONObject jsonObject = JSON.parseObject(bodyAsString);
-        System.out.println(jsonObject);
+        log.info("统一下单，生成预支付交易单：{}", jsonObject);
 
         String prepayId = jsonObject.getString("prepay_id");
         if (prepayId != null) {
@@ -207,7 +204,6 @@ public class WeChatPayUtil {
 
     /**
      * 申请退款
-     *
      * @param outTradeNo    商户订单号
      * @param outRefundNo   商户退款单号
      * @param refund        退款金额
