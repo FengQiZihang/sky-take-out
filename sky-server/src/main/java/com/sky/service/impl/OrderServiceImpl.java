@@ -34,6 +34,9 @@ import java.util.List;
 @Slf4j
 public class OrderServiceImpl implements OrderService {
 
+    // Mock 开关
+    private static final boolean mockPay = true;
+
     @Autowired
     private OrderMapper orderMapper;
     @Autowired
@@ -116,8 +119,6 @@ public class OrderServiceImpl implements OrderService {
         Long userId = BaseContext.getCurrentId();
         User user = userMapper.getById(userId);
 
-        // Mock 开关
-        boolean mockPay = true;
 
         // ---------------------- 模拟支付流程 ---------------------- //
         if (mockPay) {
@@ -237,5 +238,59 @@ public class OrderServiceImpl implements OrderService {
         orderVO.setOrderDetailList(orderDetailList);
 
         return orderVO;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void userCancelById(Long id) throws Exception {
+        // 根据id查询订单
+        log.info("【用户端】根据id查询订单:id={}", id);
+        Orders ordersDB = orderMapper.getById(id);
+
+        if (ordersDB == null) {
+            // 订单不存在
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        log.info("【用户端】订单状态:{}", ordersDB.getStatus());
+
+        // 订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+        if (ordersDB.getStatus() > 2) {
+            // 订单状态错误
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orders = new Orders();
+        orders.setId(id);
+
+        // 订单处于待接单状态下取消，需要进行退款
+        if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+
+            if (mockPay) {
+                // -------------------------- 模拟退款流程 ---------------------- //
+                log.info("【用户端】模拟退款，直接返回成功");
+            } else {
+                // -------------------------- 实际退款流程 ---------------------- //
+                log.info("【用户端】实际退款，调用微信支付退款接口");
+                //调用微信支付退款接口
+                weChatPayUtil.refund(
+                        ordersDB.getNumber(), // 商户订单号
+                        ordersDB.getNumber(), // 商户退款单号
+                        new BigDecimal(0.01), // 退款金额，单位 元
+                        new BigDecimal(0.01) // 原订单金额
+                );
+            }
+
+            // 支付状态 修改为 退款
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+        // 更新订单状态、取消原因、取消时间
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason("用户取消");
+        orders.setCancelTime(LocalDateTime.now());
+        orderMapper.update(orders);
     }
 }
