@@ -217,4 +217,25 @@ public class OrderServiceImpl implements OrderService {
         // 封装分页查询结果并返回
         return new PageResult(pageResult.getTotal(), orderVOList);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OrderVO getOrderDetailById(Long id) {
+        // 根据订单id查询订单
+        log.info("【用户端】根据订单id查询订单:id={}", id);
+        Orders orders = orderMapper.getById(id);
+
+        // 根据订单id查询订单明细
+        log.info("【用户端】根据订单id查询订单明细:id={}", id);
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+
+        // 将订单数据封装到 OrderVO 中
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders, orderVO);
+        orderVO.setOrderDetailList(orderDetailList);
+
+        return orderVO;
+    }
 }
