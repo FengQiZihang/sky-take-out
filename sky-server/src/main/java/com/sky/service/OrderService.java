@@ -53,4 +53,10 @@ public interface OrderService {
      * @throws OrderBusinessException 订单状态错误
      */
     void userCancelById(Long id) throws Exception;
+
+    /**
+     * 再来一单
+     * @param id 订单id
+     */
+    void repetition(Long id);
 }

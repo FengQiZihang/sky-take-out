@@ -49,7 +49,6 @@ public class OrderController {
         return Result.success(orderPaymentVO);
     }
 
-
     /**
      * 历史订单查询
      * @param page 页码
@@ -87,6 +86,18 @@ public class OrderController {
     public Result<String> cancel(@PathVariable Long id) throws Exception{
         log.info("【用户端】取消订单:id={}", id);
         orderService.userCancelById(id);
+        return Result.success();
+    }
+
+    /**
+     * 再来一单
+     * @param id 订单id
+     */
+    @PostMapping("/repetition/{id}")
+    @ApiOperation("再来一单")
+    public Result<String> repetition(@PathVariable Long id) {
+        log.info("【用户端】再来一单:id={}", id);
+        orderService.repetition(id);
         return Result.success();
     }
 }

@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -301,5 +302,36 @@ public class OrderServiceImpl implements OrderService {
         orders.setCancelTime(LocalDateTime.now());
         log.info("【用户端】更新订单状态、取消原因、取消时间:orders={}", orders);
         orderMapper.update(orders);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void repetition(Long id) {
+        // 查询当前的用户id
+        Long userId = BaseContext.getCurrentId();
+
+        // 根据订单id查询当前订单详情
+        log.info("【用户端】根据订单id查询当前订单详情:id={}", id);
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+
+        // 将订单详情对象转换为购物车对象
+        List<ShoppingCart> shoppingCartList = orderDetailList.stream().map((item) -> {
+            ShoppingCart shoppingCart = new ShoppingCart();
+
+            // 将 orderDetail 的属性值拷贝到 shoppingCart 中
+            BeanUtils.copyProperties(item, shoppingCart, "id");
+
+            // 设置购物车对象的用户id和创建时间
+            shoppingCart.setUserId(userId);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+
+            return shoppingCart;
+        }).collect(Collectors.toList());
+
+        // 将购物车对象批量插入购物车表
+        log.info("【用户端】将购物车对象批量插入购物车表:shoppingCartList={}", shoppingCartList);
+        shoppingCartMapper.insertBatch(shoppingCartList);
     }
 }
