@@ -17,8 +17,8 @@ import java.util.List;
 
 @RestController("userDishController")
 @RequestMapping("/user/dish")
-@Slf4j
 @Api(tags = "C端-菜品浏览接口")
+@Slf4j
 public class DishController {
 
     @Autowired
@@ -51,9 +51,11 @@ public class DishController {
         Dish dish = new Dish();
         dish.setCategoryId(categoryId);
         dish.setStatus(StatusConstant.ENABLE);
-        // 查询菜品数据
 
+        // 查询菜品数据
+        log.info("【用户端】从mysql中获取菜品数据");
         list = dishService.listWithFlavor(dish);
+
         // 将菜品数据缓存到redis中
         redisTemplate.opsForValue().set(key, list);
         log.info("【用户端】将菜品数据缓存到redis中:{}", list);

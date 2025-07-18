@@ -15,6 +15,7 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
 import com.sky.vo.DishVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
+@Slf4j
 public class DishServiceImpl implements DishService {
 
     @Autowired
@@ -167,6 +169,7 @@ public class DishServiceImpl implements DishService {
     @Override
     public List<DishVO> listWithFlavor(Dish dish) {
         // 查询菜品数据
+        log.info("【用户端】查询菜品数据:{}", dish);
         List<Dish> dishList = dishMapper.list(dish);
 
         List<DishVO> dishVOList = new ArrayList<>();
@@ -175,6 +178,7 @@ public class DishServiceImpl implements DishService {
             // 将菜品数据封装到 DishVO 中
             BeanUtils.copyProperties(d, dishVO);
             // 根据菜品ID查询对应的口味
+            log.info("【用户端】根据菜品ID查询对应的口味:dishId={}", d.getId());
             List<DishFlavor> flavors = dishFlavorMapper.getByDishId(d.getId());
             // 将口味数据封装到 DishVO 中
             dishVO.setFlavors(flavors);

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@Slf4j
 public class AddressBookServiceImpl implements AddressBookService {
 
     @Autowired
@@ -54,13 +55,15 @@ public class AddressBookServiceImpl implements AddressBookService {
      */
     @Transactional
     public void setDefault(AddressBook addressBook) {
-        //1、将当前用户的所有地址修改为非默认地址 update address_book set is_default = ? where user_id = ?
+        // 1、将当前用户的所有地址修改为非默认地址
         addressBook.setIsDefault(StatusConstant.NOT_DEFAULT);
         addressBook.setUserId(BaseContext.getCurrentId());
+        log.info("【用户端】将当前用户的所有地址修改为非默认地址");
         addressBookMapper.updateIsDefaultByUserId(addressBook);
 
-        //2、将当前地址改为默认地址 update address_book set is_default = ? where id = ?
+        // 2、将当前地址改为默认地址
         addressBook.setIsDefault(StatusConstant.DEFAULT);
+        log.info("【用户端】将当前地址改为默认地址");
         addressBookMapper.update(addressBook);
     }
 

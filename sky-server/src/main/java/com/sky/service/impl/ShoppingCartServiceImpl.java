@@ -9,6 +9,7 @@ import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.mapper.ShoppingCartMapper;
 import com.sky.service.ShoppingCartService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Autowired
@@ -37,13 +39,16 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
         // 只能查看自己的购物车
         shoppingCart.setUserId(BaseContext.getCurrentId());
+
         // 查询当前菜品或者套餐是否在购物车中
+        log.info("【用户端】查询当前菜品或者套餐是否在购物车中");
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
 
         if (!shoppingCartList.isEmpty() && shoppingCartList.get(0) != null) {
             // 如果存在，则在原来数量基础上+1
             ShoppingCart cart = shoppingCartList.get(0);
             cart.setNumber(cart.getNumber() + 1);
+            log.info("【用户端】已存在购物车中，数量+1");
             shoppingCartMapper.updateNumberById(cart);
         } else {
             // 如果不存在，则添加到购物车，数量默认就是1
@@ -51,12 +56,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             // 判断当前是添加的是菜品还是套餐
             if (shoppingCart.getDishId() != null) {
                 // 添加到购物车的是菜品
+                log.info("【用户端】将菜品添加到购物车");
                 Dish dish = dishMapper.getById(shoppingCart.getDishId());
                 shoppingCart.setAmount(dish.getPrice());
                 shoppingCart.setName(dish.getName());
                 shoppingCart.setImage(dish.getImage());
             } else {
                 // 添加到购物车的是套餐
+                log.info("【用户端】将套餐添加到购物车");
                 Setmeal setmeal = setmealMapper.getById(shoppingCart.getSetmealId());
                 shoppingCart.setAmount(setmeal.getPrice());
                 shoppingCart.setName(setmeal.getName());
@@ -64,6 +71,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             }
             shoppingCart.setCreateTime(LocalDateTime.now());
             // 插入购物车数据
+            log.info("【用户端】将购物车数据插入购物车表:{}", shoppingCart);
             shoppingCartMapper.insert(shoppingCart);
         }
     }

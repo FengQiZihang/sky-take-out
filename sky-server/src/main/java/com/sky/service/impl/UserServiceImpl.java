@@ -9,6 +9,7 @@ import com.sky.mapper.UserMapper;
 import com.sky.properties.WeChatProperties;
 import com.sky.service.UserService;
 import com.sky.utils.HttpClientUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     // 微信服务接口地址
@@ -33,7 +35,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User wxLogin(UserLoginDTO userLoginDTO) {
-        // 调用微信接口服务，获得当前微信用户的openid
+        log.info("【用户端】调用微信接口服务，获得当前微信用户的openid:");
         String openid = getOpenid(userLoginDTO.getCode());
         // 判断当openid是否为空
         if (openid == null) {
@@ -41,6 +43,7 @@ public class UserServiceImpl implements UserService {
             throw new LoginFailedException(MessageConstant.LOGIN_FAILED);
         }
         // 判断当前用户是否为新用户
+        log.info("【用户端】根据openid查询用户:{}", openid);
         User user = userMapper.getByOpenid(openid);
         if (user == null) {
             // 为新用户，自动完成注册
@@ -48,6 +51,7 @@ public class UserServiceImpl implements UserService {
                     .openid(openid)
                     .createTime(LocalDateTime.now())
                     .build();
+            log.info("【用户端】为新用户，自动完成注册:{}", user);
             userMapper.insert(user);
         }
         // 返回用户信息

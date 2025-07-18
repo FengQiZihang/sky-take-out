@@ -58,7 +58,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO) {
         // 异常情况的处理（收货地址为空、超出配送范围、购物车为空）
-        log.info("根据id查询地址 {}", ordersSubmitDTO.getAddressBookId());
+        log.info("查看用户地址是否为空");
         AddressBook addressBook = addressBookMapper.getById(ordersSubmitDTO.getAddressBookId());
         if (addressBook == null) {
             // 用户地址为空，不能下单
@@ -67,7 +67,8 @@ public class OrderServiceImpl implements OrderService {
         // 查询当前用户的购物车数据
         Long userId = BaseContext.getCurrentId();
         ShoppingCart shoppingCart = ShoppingCart.builder().userId(userId).build();
-        log.info("根据用户id查询购物车 {}", shoppingCart.getUserId());
+
+        log.info("查看用户购物车是否为空");
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
         if (shoppingCartList.isEmpty()) {
             // 购物车数据为空，不能下单
@@ -77,9 +78,11 @@ public class OrderServiceImpl implements OrderService {
         // 构造订单数据
         Orders orders = new Orders();
         BeanUtils.copyProperties(ordersSubmitDTO, orders);
-        orders.setPhone(orders.getPhone());
-        orders.setAddress(orders.getAddress());
-        orders.setConsignee(orders.getConsignee());
+        orders.setPhone(addressBook.getPhone());
+        // 拼接详细地址
+        String address = addressBook.getProvinceName() + addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail();
+        orders.setAddress(address);
+        orders.setConsignee(addressBook.getConsignee());
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
         orders.setUserId(userId);
         orders.setStatus(Orders.PENDING_PAYMENT);
@@ -166,6 +169,7 @@ public class OrderServiceImpl implements OrderService {
         Long userId = BaseContext.getCurrentId();
 
         // 根据订单号查询当前用户的订单
+        log.info("【用户端】根据订单号查询当前用户的订单:outTradeNo={}, userId={}", outTradeNo, userId);
         Orders ordersDB = orderMapper.getByNumberAndUserId(outTradeNo, userId);
 
         // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
@@ -176,6 +180,7 @@ public class OrderServiceImpl implements OrderService {
                 .checkoutTime(LocalDateTime.now())
                 .build();
 
+        log.info("【用户端】根据订单id更新订单的状态、支付状态、结账时间:orders={}", orders);
         orderMapper.update(orders);
     }
 
@@ -193,7 +198,7 @@ public class OrderServiceImpl implements OrderService {
         PageHelper.startPage(page, pageSize);
 
         // 执行分页查询
-        log.info("【用户端】历史订单查询:ordersPageQueryDTO={}", ordersPageQueryDTO);
+        log.info("【用户端】历史订单查询:{}", ordersPageQueryDTO);
         Page<Orders> pageResult = orderMapper.pageQuery(ordersPageQueryDTO);
 
 
@@ -214,7 +219,7 @@ public class OrderServiceImpl implements OrderService {
                 orderVOList.add(orderVO);
             }
         }
-        log.info("【用户端】历史订单查询:orderVOList={}", orderVOList);
+        log.info("【用户端】历史订单查询:{}", orderVOList);
 
         // 封装分页查询结果并返回
         return new PageResult(pageResult.getTotal(), orderVOList);
@@ -333,5 +338,47 @@ public class OrderServiceImpl implements OrderService {
         // 将购物车对象批量插入购物车表
         log.info("【用户端】将购物车对象批量插入购物车表:shoppingCartList={}", shoppingCartList);
         shoppingCartMapper.insertBatch(shoppingCartList);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        // 设置分页查询条件
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+
+        // 执行分页查询
+        Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+        // 部分订单状态，需要额外返回订单菜品信息，将Orders转化为OrderVO
+        List<OrderVO> orderVOList = page.getResult().stream().map((order) -> {
+            OrderVO orderVO = new OrderVO();
+            BeanUtils.copyProperties(order, orderVO);
+            String orderDishes = getOrderDishesStr(order);
+            orderVO.setOrderDishes(orderDishes);
+            return orderVO;
+        }).collect(Collectors.toList());
+
+        // 封装分页查询结果并返回
+        return new PageResult(page.getTotal(), orderVOList);
+    }
+
+    /**
+     * 根据订单id获取菜品信息字符串
+     * @param order 订单
+     * @return 订单菜品信息字符串
+     */
+    private String getOrderDishesStr(Orders order) {
+        // 根据订单id查询订单明细
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(order.getId());
+
+        // 将每一条订单菜品信息拼接为字符串（格式：宫保鸡丁*3；）
+        List<String> orderDishList = orderDetailList.stream().map(item -> {
+            return item.getName() + " * " + item.getNumber() + ";";
+        }).collect(Collectors.toList());
+
+        // 将该订单对应的所有菜品信息拼接在一起
+        return String.join("", orderDishList);
     }
 }
