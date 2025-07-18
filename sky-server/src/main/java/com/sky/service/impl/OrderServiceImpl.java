@@ -5,9 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
@@ -389,7 +387,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderStatisticsVO statistics() {
         // 根据状态，统计订单数量
-        log.info("【用户端】根据状态，统计订单数量");
+        log.info("【用户端】分别统计 待接单、待派送、派送中 状态的订单数量");
         Integer toBeConfirmed = orderMapper.countByStatus(Orders.TO_BE_CONFIRMED);
         Integer confirmed = orderMapper.countByStatus(Orders.CONFIRMED);
         Integer deliveryInProgress = orderMapper.countByStatus(Orders.DELIVERY_IN_PROGRESS);
@@ -400,5 +398,72 @@ public class OrderServiceImpl implements OrderService {
                 .confirmed(confirmed)
                 .deliveryInProgress(deliveryInProgress)
                 .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
+        Orders orders = Orders.builder()
+                .id(ordersConfirmDTO.getId())
+                .status(Orders.CONFIRMED)
+                .build();
+        log.info("根据订单id更新订单的状态:{}", orders);
+        orderMapper.update(orders);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception {
+        log.info("根据订单id查询订单,id={}", ordersRejectionDTO.getId());
+        Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
+
+        // 订单只有存在且状态为2（待接单）才可以拒单
+        if (ordersDB == null) {
+            // 订单不存在
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        log.info("订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
+        if (!ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+            // 订单状态错误
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orders = new Orders();
+        orders.setId(ordersRejectionDTO.getId());
+
+        // 支付状态为1（已支付）时要为用户退款
+        log.info("订单支付状态:{},0 未支付 1 已支付 2 退款", ordersDB.getPayStatus());
+        if (ordersDB.getPayStatus().equals(Orders.PAID)) {
+
+            if (mockPay) {
+                // -------------------------- 模拟退款流程 ---------------------- //
+                log.info("模拟退款，直接返回成功");
+            } else {
+                // -------------------------- 实际退款流程 ---------------------- //
+                log.info("实际退款，调用微信支付退款接口");
+                //调用微信支付退款接口
+                weChatPayUtil.refund(
+                        ordersDB.getNumber(), // 商户订单号
+                        ordersDB.getNumber(), // 商户退款单号
+                        new BigDecimal(0.01), // 退款金额，单位 元
+                        new BigDecimal(0.01) // 原订单金额
+                );
+            }
+
+            // 支付状态 修改为 退款
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+        // 更新订单状态、拒绝原因、取消时间
+        orders.setStatus(Orders.CANCELLED);
+        orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        orders.setCancelTime(LocalDateTime.now());
+        log.info("更新订单状态、拒绝原因、取消时间:orders={}", orders);
+        orderMapper.update(orders);
     }
 }
