@@ -232,11 +232,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderVO getOrderDetailById(Long id) {
         // 根据订单id查询订单
-        log.info("【用户端】根据订单id查询订单:id={}", id);
+        log.info("根据订单id查询订单:id={}", id);
         Orders orders = orderMapper.getById(id);
 
         // 根据订单id查询订单明细
-        log.info("【用户端】根据订单id查询订单明细:id={}", id);
+        log.info("根据订单id查询订单明细:id={}", id);
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
 
         // 将订单数据封装到 OrderVO 中
@@ -389,6 +389,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderStatisticsVO statistics() {
         // 根据状态，统计订单数量
+        log.info("【用户端】根据状态，统计订单数量");
         Integer toBeConfirmed = orderMapper.countByStatus(Orders.TO_BE_CONFIRMED);
         Integer confirmed = orderMapper.countByStatus(Orders.CONFIRMED);
         Integer deliveryInProgress = orderMapper.countByStatus(Orders.DELIVERY_IN_PROGRESS);
