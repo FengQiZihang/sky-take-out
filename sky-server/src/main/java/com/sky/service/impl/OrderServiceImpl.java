@@ -569,4 +569,34 @@ public class OrderServiceImpl implements OrderService {
         log.info("更新订单状态、派送时间:{}", orders);
         orderMapper.update(orders);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void complete(Long id) {
+        log.info("根据订单id查询订单,id={}", id);
+        Orders ordersDB = orderMapper.getById(id);
+
+        // 订单只有存在且状态为4（派送中）才可以完成
+        if (ordersDB == null) {
+            // 订单不存在
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        log.info("订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
+        if (!ordersDB.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) {
+            // 订单状态错误
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orders = new Orders();
+        orders.setId(id);
+
+        // 更新订单状态
+        orders.setStatus(Orders.COMPLETED); // 已完成
+        orders.setDeliveryTime(LocalDateTime.now());
+        log.info("更新订单状态:{}", orders);
+        orderMapper.update(orders);
+    }
 }
