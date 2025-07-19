@@ -10,6 +10,7 @@ import com.sky.vo.OrderVO;
 
 public interface OrderService {
 
+    // ---------------------------- 用户端接口 ---------------------------- //
     /**
      * 用户下单
      * @param ordersSubmitDTO 订单提交DTO
@@ -18,14 +19,14 @@ public interface OrderService {
     OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO);
 
     /**
-     * 订单支付
+     * 订单支付，返回支付参数供前端调起支付
      * @param ordersPaymentDTO 订单支付DTO
      * @return OrderPaymentVO 订单支付结果VO
      */
     OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception;
 
     /**
-     * 支付成功，修改订单状态
+     * 支付成功回调，修改订单状态
      * @param outTradeNo 商户订单号
      */
     void paySuccess(String outTradeNo);
@@ -60,6 +61,8 @@ public interface OrderService {
      */
     void repetition(Long id);
 
+
+    // ---------------------------- 商户端接口 ---------------------------- //
     /**
      * 条件订单搜索
      * @param ordersPageQueryDTO 订单搜索条件
@@ -84,4 +87,10 @@ public interface OrderService {
      * @param ordersRejectionDTO 订单拒单DTO
      */
     void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception;
+
+    /**
+     * 取消订单
+     * @param ordersCancelDTO 订单取消DTO
+     */
+    void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception;
 }

@@ -33,6 +33,7 @@ public class OrderController {
     public Result<OrderSubmitVO> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
         log.info("【用户端】用户下单:{}", ordersSubmitDTO);
         OrderSubmitVO orderSubmitVO = orderService.submitOrder(ordersSubmitDTO);
+        log.info("【用户端】用户下单:返回结果:{}", orderSubmitVO);
         return Result.success(orderSubmitVO);
     }
 
@@ -46,6 +47,7 @@ public class OrderController {
     public Result<OrderPaymentVO> payment(@RequestBody OrdersPaymentDTO ordersPaymentDTO) throws Exception {
         log.info("【用户端】订单支付:{}", ordersPaymentDTO);
         OrderPaymentVO orderPaymentVO = orderService.payment(ordersPaymentDTO);
+        log.info("【用户端】订单支付:返回结果:{}", orderPaymentVO);
         return Result.success(orderPaymentVO);
     }
 
@@ -61,6 +63,7 @@ public class OrderController {
     public Result<PageResult> page(int page, int pageSize, Integer status) {
         log.info("【用户端】历史订单查询:page={}, pageSize={}, status={}", page, pageSize, status);
         PageResult pageResult = orderService.pageQueryForUser(page, pageSize, status);
+        log.info("【用户端】历史订单查询:返回结果:{}", pageResult);
         return Result.success(pageResult);
     }
 
