@@ -312,7 +312,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 更新订单状态、取消原因、取消时间
-        orders.setStatus(Orders.CANCELLED);
+        orders.setStatus(Orders.CANCELLED); // 已取消
         orders.setCancelReason("用户取消");
         orders.setCancelTime(LocalDateTime.now());
         log.info("更新订单状态、取消原因、取消时间:{}", orders);
@@ -480,7 +480,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 更新订单状态、拒绝原因、取消时间
-        orders.setStatus(Orders.CANCELLED);
+        orders.setStatus(Orders.CANCELLED); // 已取消
         orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
         orders.setCancelTime(LocalDateTime.now());
         log.info("更新订单状态、拒绝原因、取消时间:{}", orders);
@@ -533,10 +533,40 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 更新订单状态、取消原因、取消时间
-        orders.setStatus(Orders.CANCELLED);
+        orders.setStatus(Orders.CANCELLED); // 已取消
         orders.setCancelReason(ordersCancelDTO.getCancelReason());
         orders.setCancelTime(LocalDateTime.now());
-        log.info("更新订单状态、取消原因、取消时间:orders={}", orders);
+        log.info("更新订单状态、取消原因、取消时间:{}", orders);
+        orderMapper.update(orders);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void delivery(Long id) {
+        log.info("根据订单id查询订单,id={}", id);
+        Orders ordersDB = orderMapper.getById(id);
+
+        // 订单只有存在且状态为3（已接单）才可以派送
+        if (ordersDB == null) {
+            // 订单不存在
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        log.info("订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
+        if (!ordersDB.getStatus().equals(Orders.CONFIRMED)) {
+            // 订单状态错误
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orders = new Orders();
+        orders.setId(id);
+
+        // 更新订单状态、派送时间
+        orders.setStatus(Orders.DELIVERY_IN_PROGRESS); // 派送中
+        orders.setDeliveryTime(LocalDateTime.now());
+        log.info("更新订单状态、派送时间:{}", orders);
         orderMapper.update(orders);
     }
 }
