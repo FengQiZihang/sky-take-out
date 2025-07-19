@@ -91,9 +91,9 @@ public class OrderServiceImpl implements OrderService {
         orders.setConsignee(addressBook.getConsignee());
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
         orders.setUserId(userId);
-        orders.setStatus(Orders.PENDING_PAYMENT);
-        orders.setPayStatus(Orders.UN_PAID);
-        orders.setOrderTime(LocalDateTime.now());
+        orders.setStatus(Orders.PENDING_PAYMENT); // 待付款
+        orders.setPayStatus(Orders.UN_PAID); // 未支付
+        orders.setOrderTime(LocalDateTime.now()); // 设置下单时间
 
         // 向订单表插入1条数据
         log.info("向订单表插入1条数据 {}", orders);
@@ -357,7 +357,7 @@ public class OrderServiceImpl implements OrderService {
 
         // 将每一条订单菜品信息拼接为字符串（格式：宫保鸡丁*3；）
         List<String> orderDishList = orderDetailList.stream().map(item -> {
-            return item.getName() + " * " + item.getNumber() + ";";
+            return item.getName() + " * " + item.getNumber() + "; ";
         }).collect(Collectors.toList());
         log.info("订单菜品信息字符串:{}", orderDishList);
 
@@ -391,7 +391,7 @@ public class OrderServiceImpl implements OrderService {
     public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
         Orders orders = Orders.builder()
                 .id(ordersConfirmDTO.getId())
-                .status(Orders.CONFIRMED)
+                .status(Orders.CONFIRMED) // 已接单
                 .build();
         log.info("根据订单id更新订单的状态:{}", orders);
         orderMapper.update(orders);
@@ -456,26 +456,20 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void delivery(Long id) {
-        log.info("根据订单id查询订单,id={}", id);
-        Orders ordersDB = orderMapper.getById(id);
+        Orders ordersDB = getOrderById(id);
 
-        // 订单只有存在且状态为3（已接单）才可以派送
-        if (ordersDB == null) {
-            // 订单不存在
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
-        }
-
+        // 订单状态为3（已接单）才可以派送
         log.info("订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
         if (!ordersDB.getStatus().equals(Orders.CONFIRMED)) {
             // 订单状态错误
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        Orders orders = new Orders();
-        orders.setId(id);
-
         // 更新订单状态、派送时间
-        orders.setStatus(Orders.DELIVERY_IN_PROGRESS); // 派送中
+        Orders orders = Orders.builder()
+                .id(id)
+                .status(Orders.DELIVERY_IN_PROGRESS) // 派送中
+                .build();
         log.info("更新订单状态、派送时间:{}", orders);
         orderMapper.update(orders);
     }
@@ -485,27 +479,21 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void complete(Long id) {
-        log.info("根据订单id查询订单,id={}", id);
-        Orders ordersDB = orderMapper.getById(id);
+        Orders ordersDB = getOrderById(id);
 
-        // 订单只有存在且状态为4（派送中）才可以完成
-        if (ordersDB == null) {
-            // 订单不存在
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
-        }
-
+        // 订单状态为4（派送中）才可以完成
         log.info("订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
         if (!ordersDB.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) {
             // 订单状态错误
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        Orders orders = new Orders();
-        orders.setId(id);
-
         // 更新订单状态
-        orders.setStatus(Orders.COMPLETED); // 已完成
-        orders.setDeliveryTime(LocalDateTime.now());
+        Orders orders = Orders.builder()
+                .id(id)
+                .status(Orders.COMPLETED) // 已完成
+                .deliveryTime(LocalDateTime.now()) // 设置送达时间
+                .build();
         log.info("更新订单状态:{}", orders);
         orderMapper.update(orders);
     }
@@ -560,8 +548,8 @@ public class OrderServiceImpl implements OrderService {
     private void updateOrderToCancelled(Long id, String cancelReason, String rejectionReason, boolean needRefund) {
         Orders orders = Orders.builder()
                 .id(id)
-                .status(Orders.CANCELLED)
-                .cancelTime(LocalDateTime.now())
+                .status(Orders.CANCELLED) // 已取消
+                .cancelTime(LocalDateTime.now()) // 设置取消时间
                 .build();
 
         // 设置取消原因（如果有）
@@ -576,11 +564,10 @@ public class OrderServiceImpl implements OrderService {
 
         // 设置退款状态（如果需要）
         if (needRefund) {
-            orders.setPayStatus(Orders.REFUND);
+            orders.setPayStatus(Orders.REFUND); // 支付状态设置为 退款
         }
 
         log.info("更新订单状态为已取消:{}", orders);
         orderMapper.update(orders);
     }
-
 }
