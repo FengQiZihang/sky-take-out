@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     // Mock 开关
-    private static final boolean mockPay = true;
+    private static final boolean MOCK_PAY = true;
 
     @Autowired
     private OrderMapper orderMapper;
@@ -137,7 +137,7 @@ public class OrderServiceImpl implements OrderService {
         User user = userMapper.getById(userId);
         
         // ---------------------- 模拟支付流程 ---------------------- //
-        if (mockPay) {
+        if (MOCK_PAY) {
             log.info("模拟支付，直接调用 paySuccess() 方法");
             // 模拟支付成功
             paySuccess(ordersPaymentDTO.getOrderNumber());
@@ -263,21 +263,14 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void userCancelById(Long id) throws Exception {
-        // 根据id查询订单
-        log.info("根据id查询订单:id={}", id);
-        Orders ordersDB = orderMapper.getById(id);
-
         /**
          * 业务逻辑
          * 待付款：用户直接取消
          * 待接单：商家需要为用户退款
          * 已接单/派送中：用户需要电话联系商家
          */
-
-        if (ordersDB == null) {
-            // 订单不存在
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
-        }
+        // 根据id查询订单
+        Orders ordersDB = getOrderById(id);
 
         log.info("订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
         if (ordersDB.getStatus() > 2) {
@@ -286,37 +279,14 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        Orders orders = new Orders();
-        orders.setId(id);
-
         // 订单处于待接单状态下取消，需要进行退款
-        if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
-
-            if (mockPay) {
-                // -------------------------- 模拟退款流程 ---------------------- //
-                log.info("模拟退款，直接返回成功");
-            } else {
-                // -------------------------- 实际退款流程 ---------------------- //
-                log.info("实际退款，调用微信支付退款接口");
-                //调用微信支付退款接口
-                weChatPayUtil.refund(
-                        ordersDB.getNumber(), // 商户订单号
-                        ordersDB.getNumber(), // 商户退款单号
-                        new BigDecimal(0.01), // 退款金额，单位 元
-                        new BigDecimal(0.01) // 原订单金额
-                );
-            }
-
-            // 支付状态 修改为 退款
-            orders.setPayStatus(Orders.REFUND);
+        boolean needRefund = ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED);
+        if (needRefund) {
+            doRefund(ordersDB);
         }
 
-        // 更新订单状态、取消原因、取消时间
-        orders.setStatus(Orders.CANCELLED); // 已取消
-        orders.setCancelReason("用户取消");
-        orders.setCancelTime(LocalDateTime.now());
-        log.info("更新订单状态、取消原因、取消时间:{}", orders);
-        orderMapper.update(orders);
+        // 用户取消：只设置取消原因
+        updateOrderToCancelled(id, "用户取消", null, needRefund);
     }
 
     /**
@@ -432,20 +402,13 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception {
-        log.info("根据订单id查询订单,id={}", ordersRejectionDTO.getId());
-        Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
-
         /**
          * 业务逻辑
          * 待接单：商家可以拒单，需给出拒单原因
          * 已支付：商家需要为用户退款
          */
-
-        // 订单只有存在且状态为2（待接单）才可以拒单
-        if (ordersDB == null) {
-            // 订单不存在
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
-        }
+        // 根据id查询订单
+        Orders ordersDB = getOrderById(ordersRejectionDTO.getId());
 
         log.info("订单状态:{},1 待付款 2 待接单 3 已接单 4 派送中 5 已完成 6 已取消", ordersDB.getStatus());
         if (!ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
@@ -453,38 +416,15 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        Orders orders = new Orders();
-        orders.setId(ordersRejectionDTO.getId());
-
         // 支付状态为1（已支付）时要为用户退款
         log.info("订单支付状态:{},0 未支付 1 已支付 2 退款", ordersDB.getPayStatus());
-        if (ordersDB.getPayStatus().equals(Orders.PAID)) {
-
-            if (mockPay) {
-                // -------------------------- 模拟退款流程 ---------------------- //
-                log.info("模拟退款，直接返回成功");
-            } else {
-                // -------------------------- 实际退款流程 ---------------------- //
-                log.info("实际退款，调用微信支付退款接口");
-                //调用微信支付退款接口
-                weChatPayUtil.refund(
-                        ordersDB.getNumber(), // 商户订单号
-                        ordersDB.getNumber(), // 商户退款单号
-                        new BigDecimal(0.01), // 退款金额，单位 元
-                        new BigDecimal(0.01) // 原订单金额
-                );
-            }
-
-            // 支付状态 修改为 退款
-            orders.setPayStatus(Orders.REFUND);
+        boolean needRefund = ordersDB.getPayStatus().equals(Orders.PAID);
+        if (needRefund) {
+            doRefund(ordersDB);
         }
 
-        // 更新订单状态、拒绝原因、取消时间
-        orders.setStatus(Orders.CANCELLED); // 已取消
-        orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
-        orders.setCancelTime(LocalDateTime.now());
-        log.info("更新订单状态、拒绝原因、取消时间:{}", orders);
-        orderMapper.update(orders);
+        // 商家拒单：只设置拒绝原因
+        updateOrderToCancelled(ordersRejectionDTO.getId(), null, ordersRejectionDTO.getRejectionReason(), needRefund);
     }
 
     /**
@@ -492,52 +432,23 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception {
-        log.info("根据订单id查询订单,id={}", ordersCancelDTO.getId());
-        Orders ordersDB = orderMapper.getById(ordersCancelDTO.getId());
-
         /**
          * 业务逻辑
          * 已支付：商家需要为用户退款
          * 取消时需要指定取消原因
          */
-
-        if (ordersDB == null) {
-            // 订单不存在
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
-        }
-
-        Orders orders = new Orders();
-        orders.setId(ordersCancelDTO.getId());
+        // 根据id查询订单
+        Orders ordersDB = getOrderById(ordersCancelDTO.getId());
 
         // 支付状态为1（已支付）时要为用户退款
         log.info("订单支付状态:{},0 未支付 1 已支付 2 退款", ordersDB.getPayStatus());
-        if (ordersDB.getPayStatus().equals(Orders.PAID)) {
-
-            if (mockPay) {
-                // -------------------------- 模拟退款流程 ---------------------- //
-                log.info("模拟退款，直接返回成功");
-            } else {
-                // -------------------------- 实际退款流程 ---------------------- //
-                log.info("实际退款，调用微信支付退款接口");
-                //调用微信支付退款接口
-                weChatPayUtil.refund(
-                        ordersDB.getNumber(), // 商户订单号
-                        ordersDB.getNumber(), // 商户退款单号
-                        new BigDecimal(0.01), // 退款金额，单位 元
-                        new BigDecimal(0.01) // 原订单金额
-                );
-            }
-
-            // 支付状态 修改为 退款
-            orders.setPayStatus(Orders.REFUND);
+        boolean needRefund = ordersDB.getPayStatus().equals(Orders.PAID);
+        if (needRefund) {
+            doRefund(ordersDB);
         }
 
-        // 更新订单状态、取消原因、取消时间
-        orders.setStatus(Orders.CANCELLED); // 已取消
-        orders.setCancelReason(ordersCancelDTO.getCancelReason());
-        orders.setCancelTime(LocalDateTime.now());
-        log.info("更新订单状态、取消原因、取消时间:{}", orders);
-        orderMapper.update(orders);
+        // 商家取消：只设置取消原因
+        updateOrderToCancelled(ordersCancelDTO.getId(), ordersCancelDTO.getCancelReason(), null, needRefund);
     }
 
     /**
@@ -565,7 +476,6 @@ public class OrderServiceImpl implements OrderService {
 
         // 更新订单状态、派送时间
         orders.setStatus(Orders.DELIVERY_IN_PROGRESS); // 派送中
-        orders.setDeliveryTime(LocalDateTime.now());
         log.info("更新订单状态、派送时间:{}", orders);
         orderMapper.update(orders);
     }
@@ -599,4 +509,78 @@ public class OrderServiceImpl implements OrderService {
         log.info("更新订单状态:{}", orders);
         orderMapper.update(orders);
     }
+
+
+    // ---------------------------- 抽取公共方法 ---------------------------- //
+    /**
+     * 根据ID查询订单，如果不存在则抛异常
+     * @param id 订单ID
+     * @return 订单信息
+     */
+    private Orders getOrderById(Long id) {
+        // 根据id查询订单
+        log.info("根据id查询订单:id={}", id);
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            // 订单不存在
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        return orders;
+    }
+
+    /**
+     * 执行退款操作
+     * @param ordersDB 订单信息
+     * @throws Exception 退款异常
+     */
+    private void doRefund(Orders ordersDB) throws Exception {
+        if (MOCK_PAY) {
+            // -------------------------- 模拟退款流程 ---------------------- //
+            log.info("模拟退款，直接返回成功");
+        } else {
+            // -------------------------- 实际退款流程 ---------------------- //
+            log.info("实际退款，调用微信支付退款接口");
+            //调用微信支付退款接口
+            weChatPayUtil.refund(
+                    ordersDB.getNumber(), // 商户订单号
+                    ordersDB.getNumber(), // 商户退款单号
+                    new BigDecimal(0.01), // 退款金额，单位 元
+                    new BigDecimal(0.01) // 原订单金额
+            );
+        }
+    }
+
+    /**
+     * 更新订单为取消状态的通用方法
+     * @param id 订单ID
+     * @param cancelReason 取消原因（可为null）
+     * @param rejectionReason 拒绝原因（可为null）
+     * @param needRefund 是否需要退款
+     */
+    private void updateOrderToCancelled(Long id, String cancelReason, String rejectionReason, boolean needRefund) {
+        Orders orders = Orders.builder()
+                .id(id)
+                .status(Orders.CANCELLED)
+                .cancelTime(LocalDateTime.now())
+                .build();
+
+        // 设置取消原因（如果有）
+        if (cancelReason != null) {
+            orders.setCancelReason(cancelReason);
+        }
+
+        // 设置拒绝原因（如果有）
+        if (rejectionReason != null) {
+            orders.setRejectionReason(rejectionReason);
+        }
+
+        // 设置退款状态（如果需要）
+        if (needRefund) {
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+        log.info("更新订单状态为已取消:{}", orders);
+        orderMapper.update(orders);
+    }
+
 }
