@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Map;
+
 @Mapper
 public interface UserMapper {
     /**
@@ -32,4 +34,11 @@ public interface UserMapper {
      */
     @Select("select * from user where id = #{id}")
     User getById(Long id);
+
+    /**
+     * 根据时间范围统计用户数量
+     * @param map 包含开始时间、结束时间等条件的Map
+     * @return 用户数量
+     */
+    Integer countByMap(Map map);
 }
