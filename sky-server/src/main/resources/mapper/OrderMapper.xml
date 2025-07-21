@@ -65,5 +65,24 @@
             <if test="status != null">and status = #{status}</if>
         </where>
     </select>
+    
+    <!-- 根据时间范围统计销量前10的商品 -->
+    <select id="getSalesTop10ByMap" resultType="com.sky.dto.GoodsSalesDTO">
+        select od.name, sum(od.number) as number
+        from order_detail od, orders o
+        where od.order_id = o.id and o.status = 5
+        <if test="begin != null and end != null">
+            and o.order_time between #{begin} and #{end}
+        </if>
+        <if test="begin != null and end == null">
+            and o.order_time &gt;= #{begin}
+        </if>
+        <if test="begin == null and end != null">
+            and o.order_time &lt;= #{end}
+        </if>
+        group by od.name
+        order by number desc
+        limit 10
+    </select>
 
 </mapper>

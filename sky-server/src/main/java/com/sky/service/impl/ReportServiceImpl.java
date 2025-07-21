@@ -1,10 +1,12 @@
 package com.sky.service.impl;
 
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
 import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,22 @@ public class ReportServiceImpl implements ReportService {
     private UserMapper userMapper;
 
     /**
+     * 生成从开始日期到结束日期的日期列表
+     * @param begin 开始日期
+     * @param end 结束日期
+     * @return 日期列表
+     */
+    private List<LocalDate> generateDateList(LocalDate begin, LocalDate end) {
+        List<LocalDate> dateList = new ArrayList<>();
+        dateList.add(begin);
+        while (!begin.equals(end)) {
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        }
+        return dateList;
+    }
+    
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -51,6 +69,24 @@ public class ReportServiceImpl implements ReportService {
                 .dateList(StringUtils.join(dateList, ","))
                 .turnoverList(StringUtils.join(turnoverList, ","))
                 .build();
+    }
+    
+    /**
+     * 根据时间区间和订单状态统计营业额
+     * @param date 日期
+     * @param begin 开始日期
+     * @param end 结束日期
+     * @param status 订单状态
+     * @return 营业额
+     */
+    private Double getTurnoverByTimeAndStatus(LocalDate date, LocalDate begin, LocalDate end, Integer status) {
+        LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+        Map<String, Object> map = new HashMap<>();
+        map.put("begin", beginTime);
+        map.put("end", endTime);
+        map.put("status", status);
+        return orderMapper.sumByMap(map);
     }
 
     /**
@@ -85,6 +121,33 @@ public class ReportServiceImpl implements ReportService {
                 .build();
     }
 
+    /**
+     * 根据日期统计用户总量（截止到指定日期）
+     * @param date 指定日期
+     * @return 用户总量
+     */
+    private Integer getTotalUserCountByDate(LocalDate date) {
+        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+        Map<String, Object> map = new HashMap<>();
+        map.put("begin", null);
+        map.put("end", endTime);
+        return userMapper.countByMap(map);
+    }
+
+    /**
+     * 根据日期统计新增用户数量（当天新增）
+     * @param date 指定日期
+     * @return 新增用户数量
+     */
+    private Integer getNewUserCountByDate(LocalDate date) {
+        LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+        Map<String, Object> map = new HashMap<>();
+        map.put("begin", beginTime);
+        map.put("end", endTime);
+        return userMapper.countByMap(map);
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -128,6 +191,20 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
+     * 根据日期统计订单数量
+     * @param date 指定日期
+     * @return 订单数量
+     */
+    private Integer getOrderCountByDate(LocalDate date) {
+        LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+        Map<String, Object> map = new HashMap<>();
+        map.put("begin", beginTime);
+        map.put("end", endTime);
+        return orderMapper.countByMap(map);
+    }
+    
+    /**
      * 根据日期统计有效订单数量
      * @param date 指定日期
      * @return 有效订单数量
@@ -143,77 +220,46 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * 根据日期统计订单数量
-     * @param date 指定日期
-     * @return 订单数量
+     * {@inheritDoc}
      */
-    private Integer getOrderCountByDate(LocalDate date) {
-        LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
-        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
-        Map<String, Object> map = new HashMap<>();
-        map.put("begin", beginTime);
-        map.put("end", endTime);
-        return orderMapper.countByMap(map);
-    }
+    @Override
+    public SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end) {
+        // 存放商品名称列表
+        List<String> nameList = new ArrayList<>();
+        // 存放销量列表
+        List<Integer> numberList = new ArrayList<>();
 
-    /**
-     * 生成从开始日期到结束日期的日期列表
-     * @param begin 开始日期
-     * @param end 结束日期
-     * @return 日期列表
-     */
-    private List<LocalDate> generateDateList(LocalDate begin, LocalDate end) {
-        List<LocalDate> dateList = new ArrayList<>();
-        dateList.add(begin);
-        while (!begin.equals(end)) {
-            begin = begin.plusDays(1);
-            dateList.add(begin);
+        // 查询销量前10的商品
+        List<GoodsSalesDTO> salesTop10 = getSalesTop10ByTimeRange(begin, end);
+        
+        // 将商品名称和销量分别存放到对应的列表中
+        for (GoodsSalesDTO goodsSalesDTO : salesTop10) {
+            nameList.add(goodsSalesDTO.getName());
+            numberList.add(goodsSalesDTO.getNumber());
         }
-        return dateList;
+
+        // 封装返回结果
+        return SalesTop10ReportVO
+                .builder()
+                .nameList(StringUtils.join(nameList, ","))
+                .numberList(StringUtils.join(numberList, ","))
+                .build();
     }
 
     /**
-     * 根据时间区间和订单状态统计营业额
-     * @param date 日期
-     * @param begin 开始日期
-     * @param end 结束日期
-     * @param status 订单状态
-     * @return 营业额
+     * 根据时间范围统计销量前10的商品
+     * @param begin 开始时间
+     * @param end 结束时间
+     * @return List<GoodsSalesDTO> 销量前10的商品列表
      */
-    private Double getTurnoverByTimeAndStatus(LocalDate date, LocalDate begin, LocalDate end, Integer status) {
-        LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
-        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+    private List<GoodsSalesDTO> getSalesTop10ByTimeRange(LocalDate begin, LocalDate end) {
+        LocalDateTime beginTime = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);
         Map<String, Object> map = new HashMap<>();
         map.put("begin", beginTime);
         map.put("end", endTime);
-        map.put("status", status);
-        return orderMapper.sumByMap(map);
+        return orderMapper.getSalesTop10ByMap(map);
     }
 
-    /**
-     * 根据日期统计用户总量（截止到指定日期）
-     * @param date 指定日期
-     * @return 用户总量
-     */
-    private Integer getTotalUserCountByDate(LocalDate date) {
-        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
-        Map<String, Object> map = new HashMap<>();
-        map.put("begin", null);
-        map.put("end", endTime);
-        return userMapper.countByMap(map);
-    }
 
-    /**
-     * 根据日期统计新增用户数量（当天新增）
-     * @param date 指定日期
-     * @return 新增用户数量
-     */
-    private Integer getNewUserCountByDate(LocalDate date) {
-        LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
-        LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
-        Map<String, Object> map = new HashMap<>();
-        map.put("begin", beginTime);
-        map.put("end", endTime);
-        return userMapper.countByMap(map);
-    }
 }
