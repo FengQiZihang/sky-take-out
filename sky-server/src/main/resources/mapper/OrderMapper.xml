@@ -49,4 +49,21 @@
         </where>
     </select>
 
+    <!-- 根据时间范围和订单状态统计订单数量 -->
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from orders
+        <where>
+            <if test="begin != null and end != null">
+                and order_time between #{begin} and #{end}
+            </if>
+            <if test="begin != null and end == null">
+                and order_time &gt;= #{begin}
+            </if>
+            <if test="begin == null and end != null">
+                and order_time &lt;= #{end}
+            </if>
+            <if test="status != null">and status = #{status}</if>
+        </where>
+    </select>
+
 </mapper>
