@@ -38,12 +38,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      * {@inheritDoc}
      */
     @Override
-    public BusinessDataVO getBusinessData() {
-        // 获取当前时间
-        LocalDate today = LocalDate.now();
-        LocalDateTime beginTime = LocalDateTime.of(today, LocalTime.MIN);
-        LocalDateTime endTime = LocalDateTime.of(today, LocalTime.MAX);
-
+    public BusinessDataVO getBusinessData(LocalDateTime beginTime, LocalDateTime endTime) {
         // 营业额：当日已完成订单的总金额
         Map<String, Object> completedMap = buildQueryMap(beginTime, endTime, Orders.COMPLETED);
         Double turnover = orderMapper.sumByMap(completedMap);

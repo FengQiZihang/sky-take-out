@@ -533,6 +533,7 @@ public class OrderServiceImpl implements OrderService {
     /**
      * 根据ID查询订单，如果不存在则抛异常
      * @param id 订单ID
+     * @throws OrderBusinessException 订单不存在
      * @return 订单信息
      */
     private Orders getOrderById(Long id) {

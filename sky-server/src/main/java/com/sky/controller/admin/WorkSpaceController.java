@@ -10,8 +10,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/admin/workspace")
@@ -26,11 +29,14 @@ public class WorkSpaceController {
      * 查询今日运营数据
      * @return Result<WorkSpaceVO> 工作台数据
      */
-    @RequestMapping("/businessData")
+    @GetMapping("/businessData")
     @ApiOperation("查询今日运营数据")
     public Result<BusinessDataVO> businessData() {
+        // 获取当前时间
+        LocalDateTime beginTime = LocalDateTime.now().with(LocalDateTime.MIN);
+        LocalDateTime endTime = LocalDateTime.now().with(LocalDateTime.MAX);
         log.info("查询今日运营数据");
-        BusinessDataVO businessDataVO = workspaceService.getBusinessData();
+        BusinessDataVO businessDataVO = workspaceService.getBusinessData(beginTime, endTime);
         return Result.success(businessDataVO);
     }
 
@@ -38,7 +44,7 @@ public class WorkSpaceController {
      * 查询订单管理数据
      * @return Result<OrderOverViewVO> 订单管理数据
      */
-    @RequestMapping("/overviewOrders")
+    @GetMapping("/overviewOrders")
     @ApiOperation("查询订单管理数据")
     public Result<OrderOverViewVO> overviewOrders() {
         log.info("查询订单管理数据");
@@ -50,7 +56,7 @@ public class WorkSpaceController {
      * 查询菜品总览
      * @return Result<DishOverViewVO> 菜品总览数据
      */
-    @RequestMapping("/overviewDishes")
+    @GetMapping("/overviewDishes")
     @ApiOperation("查询菜品总览")
     public Result<DishOverViewVO> overviewDishes() {
         log.info("查询菜品总览");
@@ -62,7 +68,7 @@ public class WorkSpaceController {
      * 查询套餐总览
      * @return Result<SetmealOverViewVO> 套餐总览数据
      */
-    @RequestMapping("/overviewSetmeals")
+    @GetMapping("/overviewSetmeals")
     @ApiOperation("查询套餐总览")
     public Result<SetmealOverViewVO> overviewSetmeals() {
         log.info("查询套餐总览");
