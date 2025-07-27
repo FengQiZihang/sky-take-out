@@ -10,6 +10,7 @@ import com.sky.service.WorkspaceService;
 import com.sky.vo.BusinessDataVO;
 import com.sky.vo.DishOverViewVO;
 import com.sky.vo.OrderOverViewVO;
+import com.sky.vo.SetmealOverViewVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -134,6 +135,29 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
         // 封装返回结果
         return DishOverViewVO
+                .builder()
+                .sold(sold)
+                .discontinued(discontinued)
+                .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SetmealOverViewVO getOverviewSetmeals() {
+        // 已启售数量
+        Map<String, Object> soldMap = new HashMap<>();
+        soldMap.put("status", StatusConstant.ENABLE);
+        Integer sold = setmealMapper.countByMap(soldMap);
+
+        // 已停售数量
+        Map<String, Object> discontinuedMap = new HashMap<>();
+        discontinuedMap.put("status", StatusConstant.DISABLE);
+        Integer discontinued = setmealMapper.countByMap(discontinuedMap);
+
+        // 封装返回结果
+        return SetmealOverViewVO
                 .builder()
                 .sold(sold)
                 .discontinued(discontinued)

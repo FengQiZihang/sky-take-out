@@ -79,9 +79,9 @@ public interface DishMapper {
 
     /**
      * 根据条件查询菜品
-     * @param soldMap 菜品实体
+     * @param map 查询条件
      * @return List<Dish> 菜品列表
      */
     @Select("select count(id) from dish where status = #{status}")
-    Integer countByMap(Map<String, Object> soldMap);
+    Integer countByMap(Map<String, Object> map);
 }

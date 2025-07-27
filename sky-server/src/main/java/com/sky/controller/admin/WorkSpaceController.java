@@ -5,6 +5,7 @@ import com.sky.service.WorkspaceService;
 import com.sky.vo.BusinessDataVO;
 import com.sky.vo.DishOverViewVO;
 import com.sky.vo.OrderOverViewVO;
+import com.sky.vo.SetmealOverViewVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -55,5 +56,17 @@ public class WorkSpaceController {
         log.info("查询菜品总览");
         DishOverViewVO dishOverViewVO = workspaceService.getOverviewDishes();
         return Result.success(dishOverViewVO);
+    }
+
+    /**
+     * 查询套餐总览
+     * @return Result<SetmealOverViewVO> 套餐总览数据
+     */
+    @RequestMapping("/overviewSetmeals")
+    @ApiOperation("查询套餐总览")
+    public Result<SetmealOverViewVO> overviewSetmeals() {
+        log.info("查询套餐总览");
+        SetmealOverViewVO setmealOverViewVO = workspaceService.getOverviewSetmeals();
+        return Result.success(setmealOverViewVO);
     }
 }
