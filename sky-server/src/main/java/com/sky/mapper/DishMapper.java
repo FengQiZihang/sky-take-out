@@ -10,6 +10,7 @@ import com.sky.vo.DishVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface DishMapper {
@@ -75,4 +76,12 @@ public interface DishMapper {
      * @return List<Dish> 菜品列表
      */
     List<Dish> list(Dish dish);
+
+    /**
+     * 根据条件查询菜品
+     * @param soldMap 菜品实体
+     * @return List<Dish> 菜品列表
+     */
+    @Select("select count(id) from dish where status = #{status}")
+    Integer countByMap(Map<String, Object> soldMap);
 }

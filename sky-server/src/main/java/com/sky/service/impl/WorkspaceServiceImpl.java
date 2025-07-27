@@ -1,10 +1,14 @@
 package com.sky.service.impl;
 
+import com.sky.constant.StatusConstant;
 import com.sky.entity.Orders;
+import com.sky.mapper.DishMapper;
 import com.sky.mapper.OrderMapper;
+import com.sky.mapper.SetmealMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.WorkspaceService;
 import com.sky.vo.BusinessDataVO;
+import com.sky.vo.DishOverViewVO;
 import com.sky.vo.OrderOverViewVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +26,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
     @Autowired
     private OrderMapper orderMapper;
-
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
 
     /**
      * {@inheritDoc}
@@ -107,6 +114,29 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 .completedOrders(completedOrders)
                 .cancelledOrders(cancelledOrders)
                 .allOrders(allOrders)
+                .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DishOverViewVO getOverviewDishes() {
+        // 已启售数量
+        Map<String, Object> soldMap = new HashMap<>();
+        soldMap.put("status", StatusConstant.ENABLE);
+        Integer sold = dishMapper.countByMap(soldMap);
+
+        // 已停售数量
+        Map<String, Object> discontinuedMap = new HashMap<>();
+        discontinuedMap.put("status", StatusConstant.DISABLE);
+        Integer discontinued = dishMapper.countByMap(discontinuedMap);
+
+        // 封装返回结果
+        return DishOverViewVO
+                .builder()
+                .sold(sold)
+                .discontinued(discontinued)
                 .build();
     }
 
