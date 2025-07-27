@@ -5,6 +5,7 @@ import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.WorkspaceService;
 import com.sky.vo.BusinessDataVO;
+import com.sky.vo.OrderOverViewVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,13 +31,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     public BusinessDataVO getBusinessData() {
-        /**
-         * 营业额：当日已完成订单的总金额
-         * 有效订单：当日已完成订单的数量
-         * 订单完成率：有效订单数 / 总订单数
-         * 平均客单价：营业额 / 有效订单数
-         * 新增用户：当日新增用户的数量
-         */
         // 获取当前时间
         LocalDate today = LocalDate.now();
         LocalDateTime beginTime = LocalDateTime.of(today, LocalTime.MIN);
@@ -72,6 +66,47 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 .orderCompletionRate(orderCompletionRate)
                 .unitPrice(unitPrice)
                 .newUsers(newUsers)
+                .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OrderOverViewVO getOverviewOrders() {
+        // 获取当前时间
+        LocalDate today = LocalDate.now();
+        LocalDateTime beginTime = LocalDateTime.of(today, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(today, LocalTime.MAX);
+
+        // 待接单数量
+        Map<String, Object> toBeConfirmedMap = buildQueryMap(beginTime, endTime, Orders.TO_BE_CONFIRMED);
+        Integer waitingOrders = orderMapper.countByMap(toBeConfirmedMap);
+
+        // 待派送数量
+        Map<String, Object> confirmedMap = buildQueryMap(beginTime, endTime, Orders.CONFIRMED);
+        Integer deliveredOrders = orderMapper.countByMap(confirmedMap);
+
+        // 已完成数量
+        Map<String, Object> completedMap = buildQueryMap(beginTime, endTime, Orders.COMPLETED);
+        Integer completedOrders = orderMapper.countByMap(completedMap);
+
+        // 已取消数量
+        Map<String, Object> cancelledMap = buildQueryMap(beginTime, endTime, Orders.CANCELLED);
+        Integer cancelledOrders = orderMapper.countByMap(cancelledMap);
+
+        // 全部订单数量
+        Map<String, Object> allMap = buildQueryMap(beginTime, endTime, null);
+        Integer allOrders = orderMapper.countByMap(allMap);
+
+        // 封装返回结果
+        return OrderOverViewVO
+                .builder()
+                .waitingOrders(waitingOrders)
+                .deliveredOrders(deliveredOrders)
+                .completedOrders(completedOrders)
+                .cancelledOrders(cancelledOrders)
+                .allOrders(allOrders)
                 .build();
     }
 
